@@ -1,0 +1,377 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+	OBS Midi Remote 
+	version: 1.0
+	TechFactory.hu
+-->
+<xs:schema attributeFormDefault="unqualified" elementFormDefault="qualified" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns="http://schemas.techfactory.hu/OBSMidiRemote/1.0/schema" targetNamespace="http://schemas.techfactory.hu/OBSMidiRemote/1.0/schema">
+	<xs:simpleType name="StringTypeNotBlank">
+		<xs:annotation>
+			<xs:documentation xml:lang="hu">Szöveg típus (nem lehet üres)</xs:documentation>
+			<xs:documentation xml:lang="en">String type (cannot be blank)</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:string">
+			<xs:minLength value="1"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="StringType">
+		<xs:annotation>
+			<xs:documentation xml:lang="hu">Szöveg típus</xs:documentation>
+			<xs:documentation xml:lang="en">String type</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:string"/>
+	</xs:simpleType>
+	<xs:simpleType name="VersionType">
+		<xs:annotation>
+			<xs:documentation xml:lang="hu">Verzió típus</xs:documentation>
+			<xs:documentation xml:lang="en">Version type</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:string">
+			<xs:minLength value="1"/>
+			<xs:maxLength value="5"/>
+			<xs:pattern value="[0-9]\.[0-9]"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="HexFormat">
+		<xs:annotation>
+			<xs:documentation xml:lang="hu">HEX forma (pld.: 0x10)</xs:documentation>
+			<xs:documentation xml:lang="en">HEX format (e.g. 0x10)</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:string">
+			<xs:pattern value="0x[0-9A-Fa-f]{2}|[0-9]+|%ADDRESS"/>
+		</xs:restriction>
+	</xs:simpleType>
+	
+	<xs:simpleType name="InputButtonTypeEnum">
+		<xs:annotation>
+			<xs:documentation xml:lang="hu">Gomb típusok</xs:documentation>
+			<xs:documentation xml:lang="en">Types of button</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="toggle">
+				<xs:annotation>
+					<xs:documentation xml:lang="hu">Váltógomb</xs:documentation>
+					<xs:documentation xml:lang="en">Toggle button</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+			<xs:enumeration value="on">
+				<xs:annotation>
+					<xs:documentation xml:lang="hu">Bekapcsolás</xs:documentation>
+					<xs:documentation xml:lang="en">Turn on</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+			<xs:enumeration value="off">
+				<xs:annotation>
+					<xs:documentation xml:lang="hu">Kikapcsolás</xs:documentation>
+					<xs:documentation xml:lang="en">Turn off</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+			<xs:enumeration value="value">
+				<xs:annotation>
+					<xs:documentation xml:lang="hu">Egyedi érték</xs:documentation>
+					<xs:documentation xml:lang="en">Custom value</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+		</xs:restriction>
+	</xs:simpleType>
+	
+	<xs:simpleType name="OutputActionTypeEnum">
+		<xs:annotation>
+			<xs:documentation xml:lang="hu">Kimenet módok a LED-es megjelenítéshez/visszajelzéshez</xs:documentation>
+			<xs:documentation xml:lang="en">Output modes for LED visualisation/feedback</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="on">
+				<xs:annotation>
+					<xs:documentation xml:lang="hu">Bekapcsolva</xs:documentation>
+					<xs:documentation xml:lang="en">On</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+			<xs:enumeration value="off">
+				<xs:annotation>
+					<xs:documentation xml:lang="hu">Kikapcsolva</xs:documentation>
+					<xs:documentation xml:lang="en">Off</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+			<xs:enumeration value="active">
+				<xs:annotation>
+					<xs:documentation xml:lang="hu">Aktív</xs:documentation>
+					<xs:documentation xml:lang="en">Active</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+			<xs:enumeration value="starting">
+				<xs:annotation>
+					<xs:documentation xml:lang="hu">Indul</xs:documentation>
+					<xs:documentation xml:lang="en">Starting</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+			<xs:enumeration value="stopping">
+				<xs:annotation>
+					<xs:documentation xml:lang="hu">Leáll</xs:documentation>
+					<xs:documentation xml:lang="en">Stopping</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+			<xs:enumeration value="muted">
+				<xs:annotation>
+					<xs:documentation xml:lang="hu">Lenémítva (hangforrásoknál)</xs:documentation>
+					<xs:documentation xml:lang="en">Muted (for audio sources)</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+			<xs:enumeration value="value">
+				<xs:annotation>
+					<xs:documentation xml:lang="hu">Egyedi érték</xs:documentation>
+					<xs:documentation xml:lang="en">Custom value</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+		</xs:restriction>
+	</xs:simpleType>
+	
+	<xs:simpleType name="InputRuleTypeEnum">
+		<xs:annotation>
+			<xs:documentation xml:lang="hu">Bemeneti szabály típusa</xs:documentation>
+			<xs:documentation xml:lang="en">Input rule type</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="single">
+				<xs:annotation>
+					<xs:documentation xml:lang="hu">Egy elemet magába foglaló szabály</xs:documentation>
+					<xs:documentation xml:lang="en">Rule containing one element</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+			<xs:enumeration value="range">
+				<xs:annotation>
+					<xs:documentation xml:lang="hu">
+						Több elemet magába foglaló szabály. Kötelező attribútumok: from-address,to-address,from-index,to-index,step
+						from-address = kiinduló cím az eszközön
+						to-address = záró cím az eszközön
+						from-index = kiinduló elem index az OBS-ben
+						to-index = záró elem index az OBS-ben
+						step = léptetés
+					</xs:documentation>
+					<xs:documentation xml:lang="en">
+						Rule containing more element. Required attributes: from-address,to-address,from-index,to-index,step
+						from-address = starting address on device
+						to-address = last address on device
+						from-index = starting index in OBS
+						to-index = last index in OBS
+						step = step value 
+					</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+		</xs:restriction>
+	</xs:simpleType>
+	
+	<xs:simpleType name="InputBindType">
+		<xs:annotation>
+			<xs:documentation xml:lang="hu">OBS funkciók, melyekhez gombot lehet kötni</xs:documentation>
+			<xs:documentation xml:lang="en">OBS functions which can be connected to a button</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="scene">
+				<xs:annotation>
+					<xs:documentation xml:lang="hu">Jelenetek, jelenetváltás</xs:documentation>
+					<xs:documentation xml:lang="en">Scenes, switch scene</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+			<xs:enumeration value="scene-item">
+				<xs:annotation>
+					<xs:documentation xml:lang="hu">Források a jelenet alatt (megjelenít vagy eltüntet)</xs:documentation>
+					<xs:documentation xml:lang="en">Sources under scene (show or hide)</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+			<xs:enumeration value="pscene">
+				<xs:annotation>
+					<xs:documentation xml:lang="hu">Előnézeti jelenet; csak @obsmode=2 esetén</xs:documentation>
+					<xs:documentation xml:lang="en">Preview-scenes; only with @obsmode=2;</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+			<xs:enumeration value="pscene-item">
+				<xs:annotation>
+					<xs:documentation xml:lang="hu">Források az előnézeti-jelenet alatt; csak @obsmode=2 esetén</xs:documentation>
+					<xs:documentation xml:lang="en">Sources under preview-scene; only with @obsmode=2</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+			<xs:enumeration value="audio-item">
+				<xs:annotation>
+					<xs:documentation xml:lang="hu">Hang forrás-elem (némítható/engedélyezhető)</xs:documentation>
+					<xs:documentation xml:lang="en">Audio source-item (can be muted/enabled)</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+			<xs:enumeration value="audio-volume">
+				<xs:annotation>
+					<xs:documentation xml:lang="hu">Hangerő állítás</xs:documentation>
+					<xs:documentation xml:lang="en">Change audio volume</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+			<xs:enumeration value="status">
+				<xs:annotation>
+					<xs:documentation xml:lang="hu">OBS csatlakozás státusza</xs:documentation>
+					<xs:documentation xml:lang="en">OBS connection status</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+			<xs:enumeration value="transition">
+				<xs:annotation>
+					<xs:documentation xml:lang="hu">Képváltás típusok lekérdezése / aktív beállítása</xs:documentation>
+					<xs:documentation xml:lang="en">Query transition types / set active</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+			<xs:enumeration value="reload-obs-data">
+				<xs:annotation>
+					<xs:documentation xml:lang="hu">Összes adat frissítése az OBS-ből</xs:documentation>
+					<xs:documentation xml:lang="en">Reload all data from OBS</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+			<xs:enumeration value="stream">
+				<xs:annotation>
+					<xs:documentation xml:lang="hu">Stream indítása / leállítása</xs:documentation>
+					<xs:documentation xml:lang="en">Start / Stop stream</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+			<xs:enumeration value="record">
+				<xs:annotation>
+					<xs:documentation xml:lang="hu">Felvétel indítása / leállítása</xs:documentation>
+					<xs:documentation xml:lang="en">Start / Stop recording</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+			<xs:enumeration value="mode">
+				<xs:annotation>
+					<xs:documentation xml:lang="hu">Stúdió / normál mód váltás</xs:documentation>
+					<xs:documentation xml:lang="en">Switch between studio and normal mode</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+		</xs:restriction>
+	</xs:simpleType>
+	
+	<xs:complexType name="MapInfoType">
+		<xs:annotation>
+			<xs:documentation xml:lang="hu">A séma alap információit tartalmazó típus</xs:documentation>
+			<xs:documentation xml:lang="en">Field type for basic informations of schema</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="Name" type="StringTypeNotBlank">
+				<xs:annotation>
+					<xs:documentation xml:lang="hu">A séma neve (Legördülő mezőben megjelenő név)</xs:documentation>
+					<xs:documentation xml:lang="en">Schema name (Displayed name in drop-down field)</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="DeviceName" type="StringType">
+				<xs:annotation>
+					<xs:documentation xml:lang="hu">USB eszköz neve (Csak MIDI eszköz esetén)</xs:documentation>
+					<xs:documentation xml:lang="en">USB device name (Only for MIDI device)</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="Version" type="VersionType">
+				<xs:annotation>
+					<xs:documentation xml:lang="hu">A séma verziója</xs:documentation>
+					<xs:documentation xml:lang="en">Schema version</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="Author" type="StringType">
+				<xs:annotation>
+					<xs:documentation xml:lang="hu">A készítő neve</xs:documentation>
+					<xs:documentation xml:lang="en">Author name</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="Description" maxOccurs="unbounded" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation xml:lang="hu">Leírás, megjegyzés</xs:documentation>
+					<xs:documentation xml:lang="en">Description, comment</xs:documentation>
+				</xs:annotation>
+				<xs:complexType>
+					<xs:simpleContent>
+						<xs:extension base="xs:string">
+							<xs:attribute type="xs:string" name="lang" use="required"/>
+						</xs:extension>
+					</xs:simpleContent>
+                </xs:complexType>
+			</xs:element>
+			<xs:element name="Website" type="xs:anyURI">
+				<xs:annotation>
+					<xs:documentation xml:lang="hu">Weboldal</xs:documentation>
+					<xs:documentation xml:lang="en">Website</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	
+	<xs:complexType name="InputType">
+		<xs:attribute name="type" use="required" type="InputButtonTypeEnum"/>
+		<xs:attribute name="cmd" use="required" type="HexFormat"/>
+		<xs:attribute name="data1" use="required" type="HexFormat"/>
+		<xs:attribute name="data2" use="required" type="HexFormat"/>
+		<xs:attribute name="channel" type="HexFormat"/>
+	</xs:complexType>
+	
+	<xs:complexType name="OutputType">
+		<xs:attribute name="type" use="required" type="OutputActionTypeEnum"/>
+		<xs:attribute name="cmd" use="required" type="HexFormat"/>
+		<xs:attribute name="data1" use="required" type="HexFormat"/>
+		<xs:attribute name="data2" use="required" type="HexFormat"/>
+		<xs:attribute name="channel" type="HexFormat"/>
+	</xs:complexType>
+	
+	<xs:complexType name="ModifierItemType">
+		<xs:sequence>
+			<xs:element name="Input" minOccurs="1" maxOccurs="unbounded" type="InputType"/>
+			<xs:element name="Output" maxOccurs="unbounded" type="OutputType"/>
+		</xs:sequence>
+		<xs:attribute name="obsmode" use="required" type="xs:integer"/>
+	</xs:complexType>
+	
+	<xs:complexType name="ModifersType">
+		<xs:sequence>
+			<xs:sequence>
+				<xs:element name="Modifier" maxOccurs="unbounded" type="ModifierItemType"/>
+			</xs:sequence>
+		</xs:sequence>
+	</xs:complexType>
+	
+	<xs:complexType name="MapItemsType">
+		<xs:sequence>
+			<xs:element name="Item" maxOccurs="unbounded" type="MapItemType"/>
+		</xs:sequence>
+	</xs:complexType>
+	
+	<xs:complexType name="MapItemType">
+		<xs:sequence>
+			<xs:element name="Input" minOccurs="0" type="InputType"/>
+			<xs:element name="Output" maxOccurs="unbounded" type="OutputType"/>
+		</xs:sequence>
+		<xs:attribute name="type" use="required" type="InputRuleTypeEnum"/>
+		<xs:attribute name="bind" use="required" type="InputBindType"/>
+		<xs:attribute name="obsmode" use="required" type="xs:integer"/>
+		<xs:attribute name="modifier" type="xs:integer"/>
+		<xs:attribute name="from-address" type="xs:integer"/>
+		<xs:attribute name="from-index" type="xs:integer"/>
+		<xs:attribute name="index" type="xs:integer"/>
+		<xs:attribute name="to-address" type="xs:integer"/>
+		<xs:attribute name="to-index" type="xs:integer"/>
+		<xs:attribute name="step" type="xs:integer"/>
+	</xs:complexType>
+  
+	<xs:complexType name="MapType">
+		<xs:sequence>
+			<xs:element name="Modifiers" type="ModifersType"/>
+			<xs:element name="Items" type="MapItemsType"/>
+		</xs:sequence>
+		<!-- 
+			Soros kapcsolattal rendelkező eszközhöz 
+		-->
+		<xs:attribute name="baudrate" type="xs:integer"/>
+		<!-- 
+			MIDI csomagok limitálásához használható
+			max-packet: [packet-interval] us alatt maximálisan kiküldhető csomagok száma
+		-->
+		<xs:attribute name="max-packet" use="required" type="xs:integer"/>
+		<xs:attribute name="packet-interval" use="required" type="xs:integer"/>
+	</xs:complexType>
+	
+	<xs:element name="OBSDeviceMap">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element name="MapInfo" type="MapInfoType"/>
+				<xs:element name="Map" type="MapType"/>
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+</xs:schema>

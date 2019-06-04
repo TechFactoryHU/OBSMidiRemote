@@ -1,0 +1,176 @@
+<?xml version="1.0" encoding="utf-8"?>
+<OBSDeviceMap>
+	<MapInfo>
+		<Name>TFStreamBox</Name>
+		<DeviceName>TFStreamBox</DeviceName>
+		<Version>1.0</Version>
+		<Author>TechFactory</Author>
+		<Description lang="en">
+			<![CDATA[Custom streambox example map. 
+More info on our website.
+]]>
+		</Description>
+		<Description lang="hu">
+	<![CDATA[Egyedi streambox séma. 
+Bővebb infó a weboldalunkon.
+]]>
+		</Description>
+		<Website>https://techfactory.hu</Website>
+	</MapInfo>
+	<Map max-packet="-1" packet-interval="0" baudrate="115200">
+		<Modifiers>
+			<!-- SHIFT button obsmode="1" -->
+			<Modifier obsmode="1">
+				<Input type="toggle" cmd="0x90" data1="0x0D" data2="0x7F"/>
+				<Output type="active" cmd="0x90" data1="0x0D" data2="0x0A" channel="01"/>
+				<Output type="on" cmd="0x90" data1="0x0D" data2="0x1E" channel="01"/>
+				<Output type="off" cmd="0x80" data1="0x0D" data2="00"/>
+			</Modifier>
+			
+			<!-- SHIFT button obsmode="2" -->
+			<Modifier obsmode="2">
+				<Input type="toggle" cmd="0x90" data1="0x0D" data2="0x7F"/>
+				<Output type="active" cmd="0x90" data1="0x0D" data2="0x0A" channel="01"/>
+				<Output type="on" cmd="0x90" data1="0x0D" data2="0x1E" channel="01"/>
+				<Output type="off" cmd="0x80" data1="0x0D" data2="00"/>
+			</Modifier>
+			
+		</Modifiers>
+		<Items>
+			<!--
+				Stream/Reacording and StudioMode buttons are fixed both studio and normal mode
+				and not depends on modifiers
+				obsmode="0"   = any obs mode
+				modifier="-1" = any modifier
+			-->
+			
+			<!-- Stream start/stop -->
+			<Item type="single" obsmode="0" bind="stream" index="0" modifier="-1">
+				<Input type="toggle" cmd="0x90" data1="0x0A" data2="7F"/>
+				<Output type="active" cmd="0x90" data1="0x0A" data2="0x01" channel="05"/>
+				<Output type="on" cmd="0x90" data1="0x0A" data2="0x02" channel="01"/>
+				<Output type="off" cmd="0x80" data1="0x0A" data2="0"/>
+			</Item>
+			<!-- Recording start/stop -->
+			<Item type="single" obsmode="0" bind="record" index="0" modifier="-1">
+				<Input type="toggle" cmd="0x90" data1="0x0B" data2="7F" channel="01"/>
+				<Output type="active" cmd="0x90" data1="0x0B" data2="0x01" channel="05"/>
+				<Output type="on" cmd="0x90" data1="0x0B" data2="0x02" channel="01"/>
+				<Output type="off" cmd="0x80" data1="0x0B" data2="0"/>
+			</Item>
+			<!-- StudioMode -->
+			<Item type="single" obsmode="0" bind="mode" index="0" modifier="-1">
+				<Input type="toggle" cmd="0x90" data1="0x0C" data2="0x7F"/>
+				<Output type="active" cmd="0x90" data1="0x0C" data2="0x0A" channel="01"/>
+				<Output type="on" cmd="0x90" data1="0x0C" data2="0x1E" channel="01"/>
+				<Output type="off" cmd="0x80" data1="0x0C" data2="00"/>
+			</Item>
+			<!-- StatusLed -->
+			<Item type="single" obsmode="0" bind="status" index="0" modifier="-1">
+				<Output type="on" cmd="0x90" data1="0x1E" data2="0x03" channel="01"/>
+				<Output type="off" cmd="0x90" data1="0x1E" data2="0x01" channel="01"/>
+			</Item>
+			<!-- Transitions -->
+			<Item type="range" obsmode="0" bind="transition" from-index="0" to-index="2" from-address="20" to-address="28" step="4" modifier="-1">
+				<Input type="on" cmd="0x90" data1="%ADDRESS" data2="7F"/>
+				<Output type="active" cmd="0x90" data1="%ADDRESS" data2="0x09" channel="01"/>
+				<Output type="on" cmd="0x90" data1="%ADDRESS" data2="0x1D" channel="01"/>
+				<Output type="off" cmd="0x80" data1="%ADDRESS" data2="0" channel="01"/>
+			</Item>
+			<!-- Audio-item // MUTE buttons -->
+			<Item type="range" obsmode="0" bind="audio-item" from-index="0" to-index="2" from-address="21" to-address="29" step="4" modifier="-1">
+				<Input type="toggle" cmd="0x90" data1="%ADDRESS" data2="7F"/>
+				<Output type="muted" cmd="0x90" data1="%ADDRESS" data2="0x01" channel="01"/>
+				<Output type="on" cmd="0x90" data1="%ADDRESS" data2="0x16" channel="01"/>
+				<Output type="off" cmd="0x80" data1="%ADDRESS" data2="0"/>
+			</Item>
+
+			
+			
+			<!--
+				Normal mode surface
+				obsmode="1"
+			-->
+			
+			<!-- Scenes -->
+			<Item type="range" obsmode="1" bind="scene" from-index="0" to-index="3" from-address="14" to-address="17" step="1" modifier="0">
+				<Input type="on" cmd="0x90" data1="%ADDRESS" data2="0x7F"/>
+				<Output type="active" cmd="0x90" data1="%ADDRESS" data2="0x05" channel="01"/>
+				<Output type="starting" cmd="0x90" data1="%ADDRESS" data2="0x1B" channel="02"/>
+				<Output type="stopping" cmd="0x90" data1="%ADDRESS" data2="0x05" channel="02"/>
+				<Output type="on" cmd="0x90" data1="%ADDRESS" data2="0x1B" channel="01"/>
+				<Output type="off" cmd="0x80" data1="%ADDRESS" data2="0" channel="01"/>
+			</Item>
+			<!-- Scene items display/hide (sources) row 1  -->
+			<Item type="range" obsmode="1" bind="scene-item" from-index="0" to-index="2" from-address="18" to-address="26" step="4" modifier="-1">
+				<Input type="toggle" cmd="0x90" data1="%ADDRESS" data2="0x7F" />
+				<Output type="active" cmd="0x90" data1="%ADDRESS" data2="0x06" channel="01"/>
+				<Output type="on" cmd="0x90" data1="%ADDRESS" data2="0x17" channel="01"/>
+				<Output type="off" cmd="0x80" data1="%ADDRESS" data2="0" channel="01"/>
+			</Item>
+			<!-- Scene items display/hide (sources) row 2  -->
+			<Item type="range" obsmode="1" bind="scene-item" from-index="3" to-index="5" from-address="19" to-address="27" step="4" modifier="-1">
+				<Input type="toggle" cmd="0x90" data1="%ADDRESS" data2="0x7F"/>
+				<Output type="active" cmd="0x90" data1="%ADDRESS" data2="0x06" channel="01"/>
+				<Output type="on" cmd="0x90" data1="%ADDRESS" data2="0x17" channel="01"/>
+				<Output type="off" cmd="0x80" data1="%ADDRESS" data2="0" channel="01"/>
+			</Item>
+			<!-- More scenes (4-7) if modifier 1 pressed -->
+			<Item type="range" obsmode="1" bind="scene" from-index="4" to-index="7" from-address="14" to-address="17" step="1" modifier="1">
+				<Input type="on" cmd="0x90" data1="%ADDRESS" data2="0x7F"/>
+				<Output type="active" cmd="0x90" data1="%ADDRESS" data2="0x05" channel="01"/>
+				<Output type="starting" cmd="0x90" data1="%ADDRESS" data2="0x1B" channel="02"/>
+				<Output type="stopping" cmd="0x90" data1="%ADDRESS" data2="0x05" channel="02"/>
+				<Output type="on" cmd="0x90" data1="%ADDRESS" data2="0x1B" channel="01"/>
+				<Output type="off" cmd="0x80" data1="%ADDRESS" data2="0" channel="01"/>
+			</Item>
+
+
+			<!--
+				Studio mode surface
+				obsmode="2"
+			-->
+			<!-- Preview-Scenes -->
+			<Item type="range" obsmode="2" bind="pscene" from-index="0" to-index="3" from-address="14" to-address="17" step="1" modifier="-1">
+				<Input type="on" cmd="0x90" data1="%ADDRESS" data2="0x7F"/>
+				<Output type="active" cmd="0x90" data1="%ADDRESS" data2="0x05" channel="01"/>
+				<Output type="starting" cmd="0x90" data1="%ADDRESS" data2="0x1B" channel="02"/>
+				<Output type="stopping" cmd="0x90" data1="%ADDRESS" data2="0x05" channel="02"/>
+				<Output type="on" cmd="0x90" data1="%ADDRESS" data2="0x1B" channel="01"/>
+				<Output type="off" cmd="0x80" data1="%ADDRESS" data2="0"/>
+			</Item>
+			<!-- Preview-Scene items display/hide (sources) row 1  -->
+			<Item type="range" obsmode="2" bind="pscene-item" from-index="0" to-index="2" from-address="18" to-address="26" step="4" modifier="0">
+				<Input type="toggle" cmd="0x90" data1="%ADDRESS" data2="0x7F"/>
+				<Output type="active" cmd="0x90" data1="%ADDRESS" data2="0x06" channel="01"/>
+				<Output type="on" cmd="0x90" data1="%ADDRESS" data2="0x17" channel="01"/>
+				<Output type="off" cmd="0x80" data1="%ADDRESS" data2="0"/>
+			</Item>
+			<!-- Preview-Scene items display/hide (sources) row 2  -->
+			<Item type="range" obsmode="2" bind="pscene-item" from-index="3" to-index="5" from-address="19" to-address="27" step="4" modifier="0">
+				<Input type="toggle" cmd="0x90" data1="%ADDRESS" data2="0x7F"/>
+				<Output type="active" cmd="0x90" data1="%ADDRESS" data2="0x06" channel="01"/>
+				<Output type="on" cmd="0x90" data1="%ADDRESS" data2="0x17" channel="01"/>
+				<Output type="off" cmd="0x80" data1="%ADDRESS" data2="0"/>
+			</Item>
+			
+			<!-- Out-Scenes row 1  -->
+			<Item type="range" obsmode="2" bind="scene" from-index="0" to-index="2" from-address="18" to-address="26" step="4" modifier="2">
+				<Input type="on" cmd="0x90" data1="%ADDRESS" data2="0x7F"/>
+				<Output type="active" cmd="0x90" data1="%ADDRESS" data2="0x03" channel="05"/>
+				<Output type="on" cmd="0x90" data1="%ADDRESS" data2="0x17" channel="01"/>
+				<Output type="off" cmd="0x80" data1="%ADDRESS" data2="0"/>
+			</Item>
+			<!-- Out-Scenes row 2  -->
+			<Item type="range" obsmode="2" bind="scene" from-index="3" to-index="5" from-address="19" to-address="27" step="4" modifier="2">
+				<Input type="on" cmd="0x90" data1="%ADDRESS" data2="0x7F"/>
+				<Output type="active" cmd="0x90" data1="%ADDRESS" data2="0x03" channel="05"/>
+				<Output type="on" cmd="0x90" data1="%ADDRESS" data2="0x17" channel="01"/>
+				<Output type="off" cmd="0x80" data1="%ADDRESS" data2="0" />
+			</Item>
+			
+			
+
+		</Items>
+	</Map>
+</OBSDeviceMap>
