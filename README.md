@@ -1,7 +1,7 @@
-<img src="OBSMidiRemote/icons/icon.png" alt="[logo]" width="48" align="absmiddle"/> OBSMidiRemote - windows
+<img src="OBSMidiRemote/icons/icon.png" alt="logo" width="48" align="absmiddle"/> OBSMidiRemote - windows
 =======================
 
-With this app you can turn any MIDI controller to an Open Broadcaster Software (OBS) remote. 
+With this app you can turn any MIDI controller to an [Open Broadcaster Software (OBS)] remote. 
 Serial devices also supported, so, you can build your own controller using microcontroller (Arduino/ESP8266/etc...)
 
 
@@ -17,11 +17,11 @@ Serial devices also supported, so, you can build your own controller using micro
 #### Requirements
 
 Microsoft [.NET Framework 4.5.2] or higher, Microsoft [Visual C++ 2015 Redistributable] (x86)
-and [OBS Websocket plugin]
+and [OBS Websocket plugin] 4.5.0 or higher
 
 #### Download
 
-You can download the latest reelase from [release page].
+You can download the latest release from [release page].
 
 #### Development
 
@@ -39,19 +39,19 @@ websocket-sharp (MIT)		https://github.com/sta/websocket-sharp
 
 #### Screenshot
 <p align="center">
-![alt text](http://techfactory.hu/static/content/obsmidiremote_app_scr.jpg)
+<img src="http://techfactory.hu/static/content/obsmidiremote_app_scr.jpg" alt="App screenshot">
 </p>
 
 #### Sample circuit for own controller
 <p align="center">
-<img src="examples/circuit/sample_arduino.png" alt="[logo]" width="100%" align="absmiddle"/>
+<img src="examples/circuit/sample_arduino.png" alt="Sample circuit" width="100%" align="absmiddle"/>
 </p>
 Sample arduino code available in examples folder.
 
 
 #### Others (currently only in Hungarian)
-Youtube video		https://youtu.be/NEpOx8-5LfE
-XML schema howto	http://techfactory.hu/projektek/streamerbox/
+- Youtube video		https://youtu.be/NEpOx8-5LfE
+- XML schema howto	http://techfactory.hu/projektek/streamerbox/
 
 
 [.NET Framework 4.5.2]: https://www.microsoft.com/en-US/download/details.aspx?id=53344
@@ -61,3 +61,4 @@ XML schema howto	http://techfactory.hu/projektek/streamerbox/
 [Visual Studio 2015]: https://www.visualstudio.com/downloads/
 [release page]: https://github.com/TechFactoryHU/OBSMidiRemote/releases
 [XSD available]: https://github.com/TechFactoryHU/OBSMidiRemote/tree/v1.0.0/examples/xmlschemas
+[Open Broadcaster Software (OBS)]: https://obsproject.com
