@@ -203,7 +203,7 @@
 					<xs:documentation xml:lang="en">Change audio volume</xs:documentation>
 				</xs:annotation>
 			</xs:enumeration>
-			<xs:enumeration value="status">
+			<xs:enumeration value="connection-status">
 				<xs:annotation>
 					<xs:documentation xml:lang="hu">OBS csatlakozás státusza</xs:documentation>
 					<xs:documentation xml:lang="en">OBS connection status</xs:documentation>
@@ -219,6 +219,12 @@
 				<xs:annotation>
 					<xs:documentation xml:lang="hu">Összes adat frissítése az OBS-ből</xs:documentation>
 					<xs:documentation xml:lang="en">Reload all data from OBS</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+			<xs:enumeration value="reload-scheme">
+				<xs:annotation>
+					<xs:documentation xml:lang="hu">Xml sémafájl újratöltése</xs:documentation>
+					<xs:documentation xml:lang="en">Reload scheme xml</xs:documentation>
 				</xs:annotation>
 			</xs:enumeration>
 			<xs:enumeration value="stream">

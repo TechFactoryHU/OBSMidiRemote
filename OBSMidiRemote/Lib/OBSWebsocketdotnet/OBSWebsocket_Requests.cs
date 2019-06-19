@@ -38,9 +38,9 @@ namespace OBSMidiRemote.Lib.OBSWebsocketdotnet
         /// Get the current scene info along with its items
         /// </summary>
         /// <returns>An <see cref="OBSScene"/> object describing the current scene</returns>
-        public OBSScene GetCurrentScene()
+        public async Task<OBSScene> GetCurrentScene()
         {
-            JObject response = SendRequest("GetCurrentScene");
+            JObject response = await SendRequest("GetCurrentScene");
             return new OBSScene(response);
         }
 
@@ -52,19 +52,17 @@ namespace OBSMidiRemote.Lib.OBSWebsocketdotnet
         {
             var requestFields = new JObject();
             requestFields.Add("scene-name", sceneName);
-
-           SendRequest("SetCurrentScene", requestFields);
+            SyncRequest("SetCurrentScene", requestFields);
         }
 
         /// <summary>
         /// List every available scene
         /// </summary>
         /// <returns>A <see cref="List{OBSScene}" /> of <see cref="OBSScene"/> objects describing each scene</returns>
-        public List<OBSScene> ListScenes()
+        public async Task<List<OBSScene>> ListScenes()
         {
-            JObject response = SendRequest("GetSceneList");
+            JObject response = await SendRequest("GetSceneList");
             JArray items = (JArray)response["scenes"];
-
             var scenes = new List<OBSScene>();
             foreach (JObject sceneData in items)
             {
@@ -113,9 +111,9 @@ namespace OBSMidiRemote.Lib.OBSWebsocketdotnet
         /// Get the current status of the streaming and recording outputs
         /// </summary>
         /// <returns>An <see cref="OutputStatus"/> object describing the current outputs states</returns>
-        public OutputStatus GetStreamingStatus()
+        public async Task<OutputStatus> GetStreamingStatus()
         {
-            JObject response = SendRequest("GetStreamingStatus");
+            JObject response = await SendRequest("GetStreamingStatus");
             var outputStatus = new OutputStatus(response);
             return outputStatus;
         }
@@ -124,9 +122,9 @@ namespace OBSMidiRemote.Lib.OBSWebsocketdotnet
         /// List all transitions
         /// </summary>
         /// <returns>A <see cref="List{T}"/> of all transition names</returns>
-        public List<string> ListTransitions()
+        public async Task<List<string>> ListTransitions()
         {
-            JObject response = SendRequest("GetTransitionList");
+            JObject response = await SendRequest("GetTransitionList");
             JArray items = (JArray)response["transitions"];
 
             List<string> transitionNames = new List<string>();
@@ -142,9 +140,9 @@ namespace OBSMidiRemote.Lib.OBSWebsocketdotnet
         /// Get the current transition name and duration
         /// </summary>
         /// <returns>An <see cref="TransitionSettings"/> object with the current transition name and duration</returns>
-        public TransitionSettings GetCurrentTransition()
+        public async Task<TransitionSettings> GetCurrentTransition()
         {
-            JObject respBody = SendRequest("GetCurrentTransition");
+            JObject respBody = await SendRequest("GetCurrentTransition");
             return new TransitionSettings(respBody);
         }
 
@@ -156,8 +154,7 @@ namespace OBSMidiRemote.Lib.OBSWebsocketdotnet
         {
             var requestFields = new JObject();
             requestFields.Add("transition-name", transitionName);
-
-            SendRequest("SetCurrentTransition", requestFields);
+            SyncRequest("SetCurrentTransition", requestFields);
         }
 
         /// <summary>
@@ -168,7 +165,6 @@ namespace OBSMidiRemote.Lib.OBSWebsocketdotnet
         {
             var requestFields = new JObject();
             requestFields.Add("duration", duration);
-
             SendRequest("SetTransitionDuration", requestFields);
         }
 
@@ -182,8 +178,7 @@ namespace OBSMidiRemote.Lib.OBSWebsocketdotnet
             var requestFields = new JObject();
             requestFields.Add("source", sourceName);
             requestFields.Add("volume", volume);
-
-            SendRequest("SetVolume", requestFields);
+            SyncRequest("SetVolume", requestFields);
         }
 
         /// <summary>
@@ -191,12 +186,13 @@ namespace OBSMidiRemote.Lib.OBSWebsocketdotnet
         /// </summary>
         /// <param name="sourceName">Source name</param>
         /// <returns>An <see cref="VolumeInfo"/> object containing the volume and mute state of the specified source</returns>
-        public VolumeInfo GetVolume(string sourceName)
+        public async Task<VolumeInfo> GetVolume(string sourceName)
         {
             var requestFields = new JObject();
             requestFields.Add("source", sourceName);
 
-            var response = SendRequest("GetVolume", requestFields);
+            var response = await SendRequest("GetVolume", requestFields);
+
             return new VolumeInfo(response);
         }
 
@@ -284,9 +280,9 @@ namespace OBSMidiRemote.Lib.OBSWebsocketdotnet
         /// Get the name of the current scene collection
         /// </summary>
         /// <returns>Name of the current scene collection</returns>
-        public string GetCurrentSceneCollection()
+        public async Task<string> GetCurrentSceneCollection()
         {
-            var response = SendRequest("GetCurrentSceneCollection");
+            var response = await SendRequest("GetCurrentSceneCollection");
             return (string)response["sc-name"];
         }
 
@@ -294,9 +290,9 @@ namespace OBSMidiRemote.Lib.OBSWebsocketdotnet
         /// List all scene collections
         /// </summary>
         /// <returns>A <see cref="List{T}"/> of the names of all scene collections</returns>
-        public List<string> ListSceneCollections()
+        public async Task<List<string>> ListSceneCollections()
         {
-            var response = SendRequest("ListSceneCollections");
+            var response = await SendRequest("ListSceneCollections");
             var items = (JArray)response["scene-collections"];
 
             List<string> sceneCollections = new List<string>();
@@ -324,9 +320,9 @@ namespace OBSMidiRemote.Lib.OBSWebsocketdotnet
         /// Get the name of the current profile
         /// </summary>
         /// <returns>Name of the current profile</returns>
-        public string GetCurrentProfile()
+        public async Task<string> GetCurrentProfile()
         {
-            var response = SendRequest("GetCurrentProfile");
+            var response = await SendRequest("GetCurrentProfile");
             return (string)response["profile-name"];
         }
 
@@ -334,9 +330,9 @@ namespace OBSMidiRemote.Lib.OBSWebsocketdotnet
         /// List all profiles
         /// </summary>
         /// <returns>A <see cref="List{T}"/> of the names of all profiles</returns>
-        public List<string> ListProfiles()
+        public async Task<List<string>> ListProfiles()
         {
-            var response = SendRequest("ListProfiles");
+            var response = await SendRequest("ListProfiles");
             var items = (JArray)response["profiles"];
 
             List<string> profiles = new List<string>();
@@ -396,9 +392,9 @@ namespace OBSMidiRemote.Lib.OBSWebsocketdotnet
         /// Get the path of the current recording folder
         /// </summary>
         /// <returns>Current recording folder path</returns>
-        public string GetRecordingFolder()
+        public async Task<string> GetRecordingFolder()
         {
-            var response = SendRequest("GetRecordingFolder");
+            var response = await SendRequest("GetRecordingFolder");
             return (string)response["rec-folder"];
         }
 
@@ -406,9 +402,9 @@ namespace OBSMidiRemote.Lib.OBSWebsocketdotnet
         /// Get duration of the currently selected transition (if supported)
         /// </summary>
         /// <returns>Current transition duration (in milliseconds)</returns>
-        public int GetTransitionDuration()
+        public async Task<int> GetTransitionDuration()
         {
-            var response = SendRequest("GetTransitionDuration");
+            var response = await SendRequest("GetTransitionDuration");
             return (int)response["transition-duration"];
         }
 
@@ -416,9 +412,9 @@ namespace OBSMidiRemote.Lib.OBSWebsocketdotnet
         /// Get status of Studio Mode
         /// </summary>
         /// <returns>Studio Mode status (on/off)</returns>
-        public bool StudioModeEnabled()
+        public async Task<bool> StudioModeEnabled()
         {
-            var response = SendRequest("GetStudioModeStatus");
+            var response = await SendRequest("GetStudioModeStatus");
             return (bool)response["studio-mode"];
         }
 
@@ -429,9 +425,9 @@ namespace OBSMidiRemote.Lib.OBSWebsocketdotnet
         public void SetStudioMode(bool enable)
         {
             if (enable)
-                SendRequest("EnableStudioMode");
+                SyncRequest("EnableStudioMode");
             else
-                SendRequest("DisableStudioMode");
+                SyncRequest("DisableStudioMode");
         }
 
         /// <summary>
@@ -439,7 +435,7 @@ namespace OBSMidiRemote.Lib.OBSWebsocketdotnet
         /// </summary>
         public void ToggleStudioMode()
         {
-            SendRequest("ToggleStudioMode");
+            SyncRequest("ToggleStudioMode");
         }
 
         /// <summary>
@@ -447,9 +443,9 @@ namespace OBSMidiRemote.Lib.OBSWebsocketdotnet
         /// if Studio Mode is disabled
         /// </summary>
         /// <returns>Preview scene object</returns>
-        public OBSScene GetPreviewScene()
+        public async Task<OBSScene> GetPreviewScene()
         {
-            var response = SendRequest("GetPreviewScene");
+            var response = await SendRequest("GetPreviewScene");
             return new OBSScene(response);
         }
 
@@ -462,7 +458,7 @@ namespace OBSMidiRemote.Lib.OBSWebsocketdotnet
         {
             var requestFields = new JObject();
             requestFields.Add("scene-name", previewScene);
-            SendRequest("SetPreviewScene", requestFields);
+            SyncRequest("SetPreviewScene", requestFields);
         }
 
         /// <summary>
@@ -505,12 +501,12 @@ namespace OBSMidiRemote.Lib.OBSWebsocketdotnet
         /// </summary>
         /// <param name="sourceName">Source name</param>
         /// <returns>Source mute status (on/off)</returns>
-        public bool GetMute(string sourceName)
+        public async Task<bool> GetMute(string sourceName)
         {
             var requestFields = new JObject();
             requestFields.Add("source", sourceName);
 
-            var response = SendRequest("GetMute",requestFields);
+            var response = await SendRequest("GetMute",requestFields);
             return (bool)response["muted"];
         }
 
@@ -519,7 +515,7 @@ namespace OBSMidiRemote.Lib.OBSWebsocketdotnet
         /// </summary>
         public void ToggleReplayBuffer()
         {
-            SendRequest("StartStopReplayBuffer");
+            SyncRequest("StartStopReplayBuffer");
         }
 
         /// <summary>
@@ -529,7 +525,7 @@ namespace OBSMidiRemote.Lib.OBSWebsocketdotnet
         /// </summary>
         public void StartReplayBuffer()
         {
-            SendRequest("StartReplayBuffer");
+            SyncRequest("StartReplayBuffer");
         }
 
         /// <summary>
@@ -538,7 +534,7 @@ namespace OBSMidiRemote.Lib.OBSWebsocketdotnet
         /// </summary>
         public void StopReplayBuffer()
         {
-            SendRequest("StopReplayBuffer");
+            SyncRequest("StopReplayBuffer");
         }
 
         /// <summary>
@@ -548,7 +544,7 @@ namespace OBSMidiRemote.Lib.OBSWebsocketdotnet
         /// </summary>
         public void SaveReplayBuffer()
         {
-            SendRequest("SaveReplayBuffer");
+            SyncRequest("SaveReplayBuffer");
         }
 
         /// <summary>
@@ -561,7 +557,7 @@ namespace OBSMidiRemote.Lib.OBSWebsocketdotnet
             var requestFields = new JObject();
             requestFields.Add("source", sourceName);
             requestFields.Add("offset", syncOffset);
-            SendRequest("SetSyncOffset", requestFields);
+            SyncRequest("SetSyncOffset", requestFields);
         }
 
         /// <summary>
@@ -569,11 +565,11 @@ namespace OBSMidiRemote.Lib.OBSWebsocketdotnet
         /// </summary>
         /// <param name="sourceName">Source name</param>
         /// <returns>Audio offset (in nanoseconds) of the specified source</returns>
-        public int GetSyncOffset(string sourceName)
+        public async Task<int> GetSyncOffset(string sourceName)
         {
             var requestFields = new JObject();
             requestFields.Add("source", sourceName);
-            var response = SendRequest("GetSyncOffset", requestFields);
+            var response = await SendRequest("GetSyncOffset", requestFields);
             return (int)response["offset"];
         }
 
@@ -597,7 +593,7 @@ namespace OBSMidiRemote.Lib.OBSWebsocketdotnet
             requestFields.Add("left", cropInfo.Left);
             requestFields.Add("right", cropInfo.Right);
 
-            SendRequest("SetSceneItemCrop", requestFields);
+            SyncRequest("SetSceneItemCrop", requestFields);
         }
 
         /// <summary>
@@ -617,9 +613,9 @@ namespace OBSMidiRemote.Lib.OBSWebsocketdotnet
         /// and Mic sources)
         /// </summary>
         /// <returns></returns>
-        public Dictionary<string, string> GetSpecialSources()
+        public async Task<Dictionary<string, string>> GetSpecialSources()
         {
-            var response = SendRequest("GetSpecialSources");
+            var response = await SendRequest("GetSpecialSources");
             var sources = new Dictionary<string, string>();
             foreach(KeyValuePair<string, JToken> x in response)
             {
@@ -644,16 +640,16 @@ namespace OBSMidiRemote.Lib.OBSWebsocketdotnet
             requestFields.Add("type", service.Type);
             requestFields.Add("settings", service.Settings);
             requestFields.Add("save", save);
-            SendRequest("SetStreamSettings", requestFields);
+            SyncRequest("SetStreamSettings", requestFields);
         }
 
         /// <summary>
         /// Get current streaming settings
         /// </summary>
         /// <returns></returns>
-        public StreamingService GetStreamSettings()
+        public async Task<StreamingService> GetStreamSettings()
         {
-            var response = SendRequest("GetStreamSettings");
+            var response = await SendRequest("GetStreamSettings");
 
             var service = new StreamingService();
             service.Type = (string)response["type"];
@@ -667,7 +663,7 @@ namespace OBSMidiRemote.Lib.OBSWebsocketdotnet
         /// </summary>
         public void SaveStreamSettings()
         {
-            SendRequest("SaveStreamSettings");
+            SyncRequest("SaveStreamSettings");
         }
 
         /// <summary>
@@ -676,14 +672,14 @@ namespace OBSMidiRemote.Lib.OBSWebsocketdotnet
         /// <param name="sourceName">Source name</param>
         /// <param name="sceneName">Optional name of a scene where the specified source can be found</param>
         /// <returns>BrowserSource properties</returns>
-        public BrowserSourceProperties GetBrowserSourceProperties(string sourceName, string sceneName = null)
+        public async Task<BrowserSourceProperties> GetBrowserSourceProperties(string sourceName, string sceneName = null)
         {
             var request = new JObject();
             request.Add("source", sourceName);
             if (sceneName != null)
                 request.Add("scene-name", sourceName);
 
-            var response = SendRequest("GetBrowserSourceProperties", request);
+            var response = await SendRequest("GetBrowserSourceProperties", request);
             return new BrowserSourceProperties(response);
         }
 
@@ -708,9 +704,9 @@ namespace OBSMidiRemote.Lib.OBSWebsocketdotnet
             SendRequest("SetBrowserSourceProperties", request);
         }
 
-        public List<OBSSourceItem> GetSourcesList()
+        public async Task<List<OBSSourceItem>> GetSourcesList()
         {
-            JObject response = SendRequest("GetSourcesList");
+            JObject response = await SendRequest("GetSourcesList");
             JArray items = (JArray)response["sources"];
             var sources = new List<OBSSourceItem>();
             foreach (JObject typeData in items)
@@ -721,9 +717,9 @@ namespace OBSMidiRemote.Lib.OBSWebsocketdotnet
             return sources;
         }
 
-        public List<OBSSourceTypes> GetSourcesTypesList()
+        public async Task<List<OBSSourceTypes>> GetSourcesTypesList()
         {
-            JObject response = SendRequest("GetSourceTypesList");
+            JObject response = await SendRequest("GetSourceTypesList");
             JArray items = (JArray)response["types"];
             var types = new List<OBSSourceTypes>();
             foreach (JObject typeData in items)
@@ -734,13 +730,19 @@ namespace OBSMidiRemote.Lib.OBSWebsocketdotnet
             return types;
         }
 
-        public SceneItemProperty GetSceneItemProperties(string sceneName, string sourceName)
+        public async Task<SceneItemProperty?> GetSceneItemProperties(string sceneName, string sourceName)
         {
             var request = new JObject();
             request.Add("scene-name", sceneName);
             request.Add("item", sourceName);
-            JObject response = SendRequest("GetSceneItemProperties", request);
-            return new SceneItemProperty(response);
+            JObject response = await SendRequest("GetSceneItemProperties", request);
+
+            if (response["error"] == null)
+            {
+                return new SceneItemProperty(response);
+            }
+
+            return null;
         }
 
         public void SetSceneItemVisibility(string itemName, bool isVisible, string sceneName = null)
@@ -752,14 +754,14 @@ namespace OBSMidiRemote.Lib.OBSWebsocketdotnet
             if (sceneName != null)
                 request.Add("scene-name", sceneName);
 
-            SendRequest("SetSceneItemProperties", request);
+            SyncRequest("SetSceneItemProperties", request);
         }
 
         public void GetSourceSettings(string sourceName)
         {
             var request = new JObject();
             request.Add("sourceName", sourceName);
-            var response = SendRequest("GetSourceSettings", request);
+            //var response = SendRequest("GetSourceSettings", request);
             //TODO
         }
     }

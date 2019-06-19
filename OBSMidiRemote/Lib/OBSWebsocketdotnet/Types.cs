@@ -25,6 +25,7 @@
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace OBSMidiRemote.Lib.OBSWebsocketdotnet
 {
@@ -114,6 +115,9 @@ namespace OBSMidiRemote.Lib.OBSWebsocketdotnet
     public delegate void StudioModeChangeCallback(OBSWebsocket sender, bool enabled);
     public delegate void HeartbeatCallback(OBSWebsocket sender, HeartbeatResponse response);
 
+    public delegate void SourceVolumeChangedCallback(OBSWebsocket sender, string sourceName, float volume);
+    public delegate void SourceMuteStateChangedCallback(OBSWebsocket sender, string sourceName, bool muted);
+
     /// <summary>
     /// Describes a scene in OBS, along with its items
     /// </summary>
@@ -141,7 +145,16 @@ namespace OBSMidiRemote.Lib.OBSWebsocketdotnet
             var sceneItems = (JArray)data["sources"];
             foreach (JObject item in sceneItems)
             {
-                Items.Add(new SceneItem(item));
+                var scitem = new SceneItem(item);
+                Items.Add(scitem);
+                if (scitem.InternalType == "group" && item["groupChildren"] != null)
+                {
+                    JArray childs = (JArray)item["groupChildren"];
+                    for (int i=childs.Count-1; i>=0; i--)
+                    {
+                        Items.Add(new SceneItem((JObject)childs[i]));
+                    }
+                }
             }
         }
     }
@@ -197,6 +210,7 @@ namespace OBSMidiRemote.Lib.OBSWebsocketdotnet
         public float Height;
 
         public bool Visible;
+        public string ParentGroupName;
 
         /// <summary>
         /// Builds the object from the JSON scene description
@@ -214,6 +228,12 @@ namespace OBSMidiRemote.Lib.OBSWebsocketdotnet
             Width = (float)data["cx"];
             Height = (float)data["cy"];
             Visible = true;
+            ParentGroupName = null;
+
+            if (data["parentGroupName"] != null)
+            {
+                ParentGroupName = (string)data["parentGroupName"];
+            }
         }
     }
 
@@ -325,6 +345,9 @@ namespace OBSMidiRemote.Lib.OBSWebsocketdotnet
         /// </summary>
         public readonly float FPS;
 
+        public readonly bool ReplayBufferActive;
+
+
         /// <summary>
         /// Builds the object from the JSON event body
         /// </summary>
@@ -342,6 +365,12 @@ namespace OBSMidiRemote.Lib.OBSWebsocketdotnet
             TotalFrames = (int)data["num-total-frames"];
             DroppedFrames = (int)data["num-dropped-frames"];
             FPS = (float)data["fps"];
+
+            ReplayBufferActive = false;
+            if (data["replay-buffer-active"] != null)
+            {
+                ReplayBufferActive = (bool)data["replay-buffer-active"];
+            }
         }
     }
 
@@ -832,15 +861,15 @@ namespace OBSMidiRemote.Lib.OBSWebsocketdotnet
         }
     }
 
-    public struct OBSAsyncCallback
+    public struct OBSResponseHandler
     {
-        public readonly DateTime timestamp;
-        public Action<JObject> callable;
+        public readonly DateTime Timestamp;
+        public TaskCompletionSource<JObject> Task;
 
-        public OBSAsyncCallback(Action<JObject> callback)
+        public OBSResponseHandler(TaskCompletionSource<JObject> _task)
         {
-            callable = callback;
-            timestamp = DateTime.Now;
+            Task = _task;
+            Timestamp = DateTime.Now;
         }
     }
 

@@ -8,6 +8,7 @@ using System.Runtime.InteropServices;
 using System.Diagnostics;
 using System.Drawing;
 using OBSMidiRemote.Lib;
+using OBSMidiRemote.Forms;
 
 namespace OBSMidiRemote
 {
@@ -18,9 +19,8 @@ namespace OBSMidiRemote
         /// </summary>
         /// 
 
-        public static CDeviceObsGw OBSgw;
         private static string deviceMapDir;
-        public static FSettings mainForm;
+        public static FMain mainForm;
         public static NotifyIcon trayIcon;
         public static System.Resources.ResourceManager res;
 
@@ -55,7 +55,6 @@ namespace OBSMidiRemote
 
            string path = System.Reflection.Assembly.GetExecutingAssembly().Location;
            deviceMapDir = Path.Combine(Application.StartupPath, "devicemaps");
-           OBSgw = new CDeviceObsGw();
 
            Application.EnableVisualStyles();
            Application.SetCompatibleTextRenderingDefault(false);
@@ -63,7 +62,7 @@ namespace OBSMidiRemote
 
            PrepareTray();
 
-           mainForm = new FSettings();
+           mainForm = new FMain();
            Application.Run(mainForm);
         }
 
@@ -107,7 +106,6 @@ namespace OBSMidiRemote
         {
             DialogResult result = MessageBox.Show(res.GetString("are_you_sure"), res.GetString("exit"), MessageBoxButtons.YesNo, MessageBoxIcon.Question, MessageBoxDefaultButton.Button2);
             if (result == DialogResult.Yes) {
-                OBSgw.Stop();
                 Application.Exit();
             }
         }

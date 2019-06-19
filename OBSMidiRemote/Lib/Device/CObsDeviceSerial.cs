@@ -1,4 +1,11 @@
-﻿using System;
+﻿#region license
+/*
+    The MIT License (MIT)
+    Copyright (c) 2019 Techfactory.hu
+*/
+#endregion
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -111,7 +118,7 @@ namespace OBSMidiRemote.Lib.Device
                     _serialPort.Open();
 
                     //check serial device with a "status" command
-                    //serial device MUST reply with same command and with Data1=0x80 Data2=0x90 
+                    //serial device MUST reply with same command and with Data1=_hsData2 Data2=_hsData1 
                     SMidiAction d = new SMidiAction();
                     d.Cmd     = _hsCmd;
                     d.Channel = _hsChannel;
@@ -142,6 +149,7 @@ namespace OBSMidiRemote.Lib.Device
                 _serialPort.Close();
             }
             handshakeTimer.Enabled = false;
+            OnStatusChanged(this, EMidiEvent.DeviceDisconnected);
         }
 
         public bool IsReady()
@@ -160,7 +168,7 @@ namespace OBSMidiRemote.Lib.Device
             {
                 var msg = new byte[5];
                 msg[0] = (byte)(data.Cmd >> 4);
-                msg[1] = (byte)(data.Cmd | data.Channel); //SendMidiCommand(o.Action);
+                msg[1] = (byte)(data.Cmd | data.Channel);
                 msg[2] = (byte)(data.Data1);
                 msg[3] = (byte)(data.Data2);
                 msg[4] = (byte)_terminator;
@@ -168,20 +176,14 @@ namespace OBSMidiRemote.Lib.Device
             }
         }
 
-
         private void _readPort(object sender, SerialDataReceivedEventArgs e)
         {
             int canreadbytes = _serialPort.BytesToRead;
             byte[] readbuffer = new byte[canreadbytes];
             int bytesRead = _serialPort.Read(readbuffer, 0, readbuffer.Length);
 
-            /*Console.WriteLine(">>");
-            Console.WriteLine(Encoding.ASCII.GetString(readbuffer));
-            Console.WriteLine("\n<<");*/
-
             for (int i=0; i<bytesRead; i++)
             {
-               // Console.Write(readbuffer[i].ToString("X2"));
                 if (readbuffer[i] == _terminator)
                 {
                     if (_cmdbufferindex == 4)
@@ -195,9 +197,7 @@ namespace OBSMidiRemote.Lib.Device
                     _cmdbuffer[_cmdbufferindex] = readbuffer[i];
                     _cmdbufferindex++;
                 }
-               // Console.Write(" ");
             }
-            //Console.WriteLine();
         }
 
         private void _resetBuffer()
@@ -216,12 +216,6 @@ namespace OBSMidiRemote.Lib.Device
             action.Channel = _cmdbuffer[1] & 0x0f;
             action.Data1 = _cmdbuffer[2];
             action.Data2 = _cmdbuffer[3];
-
-        /*    Console.Write(action.Cmd.ToString("X2") + " ");
-            Console.Write(action.Channel.ToString("X2") + " ");
-            Console.Write(action.Data1.ToString("X2") + " ");
-            Console.WriteLine(action.Data2.ToString("X2") + " ");
-            */
             //handshake
             if (action.Cmd == _hsCmd )
             {

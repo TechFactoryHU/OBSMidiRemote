@@ -201,4 +201,19 @@
   <data name="select_out_device" xml:space="preserve">
     <value>Select MIDI out device</value>
   </data>
+  <data name="tab1_title" xml:space="preserve">
+    <value>Connection</value>
+  </data>
+  <data name="tab2_title" xml:space="preserve">
+    <value>XML Schemes</value>
+  </data>
+  <data name="new_scheme" xml:space="preserve">
+    <value>New scheme</value>
+  </data>
+  <data name="refresh" xml:space="preserve">
+    <value>Refresh</value>
+  </data>
+  <data name="slobs_info" xml:space="preserve">
+    <value>At least slobs-0.15.1 version required</value>
+  </data>
 </root>

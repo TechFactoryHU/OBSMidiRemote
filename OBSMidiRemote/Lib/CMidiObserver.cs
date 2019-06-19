@@ -1,4 +1,11 @@
-﻿using System;
+﻿#region license
+/*
+    The MIT License (MIT)
+    Copyright (c) 2019 Techfactory.hu
+*/
+#endregion
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Timers;
@@ -17,16 +24,18 @@ namespace OBSMidiRemote.Lib
         private Dictionary<string, SMidiAction> midiQueue;
         private Dictionary<string, SMidiAction> midiOutputStatus;
 
-        private CDeviceObsGw obs;
+        private IOBSConnector obs;
         private int active_modifier = 0;
         private int packetCount = 0;
         private int packetInterval = 0;
-        public int serialBaudRate = 115200;
+        public  int serialBaudRate = 115200;
+        private string scheme_filename;
 
         private System.Timers.Timer midiQueueTimer;
 
-        public CMidiObserver(CDeviceObsGw refobs) {
+        public CMidiObserver(IOBSConnector refobs) {
             obs = refobs;
+            
             midiActions = new List<SMidiOBSAction>();
             midiQueue = new Dictionary<string, SMidiAction>();
             midiOutputStatus = new Dictionary<string, SMidiAction>();
@@ -37,11 +46,16 @@ namespace OBSMidiRemote.Lib
             midiQueueTimer.Enabled = false;
         }
 
-        public bool loadSchema(string filename)
+        public bool LoadSchema(string filename)
         {
             CMidiXMLSchema parser = new CMidiXMLSchema();
-            if (parser.loadSchema(filename, ref midiActions, ref packetCount, ref packetInterval, ref serialBaudRate))
+            if (parser.LoadSchema(filename))
             {
+                scheme_filename = filename;
+                midiActions     = parser.MidiActions;
+                packetInterval  = parser.MidiMapData.PacketInterval;
+                packetCount     = parser.MidiMapData.PacketCount;
+                serialBaudRate  = parser.MidiMapData.BaudRate;
 
                 if (packetInterval > 0)
                 {
@@ -49,8 +63,16 @@ namespace OBSMidiRemote.Lib
                     midiQueueTimer.Interval = packetInterval;
                 }
                 else { midiQueueTimer.Enabled = false; }
-
                 return true;
+            }
+            return false;
+        }
+
+        public bool ReloadScheme()
+        {
+            if (!String.IsNullOrEmpty(scheme_filename))
+            {
+                return LoadSchema(scheme_filename);
             }
             return false;
         }
@@ -59,7 +81,7 @@ namespace OBSMidiRemote.Lib
         {
             for (int m = 0; m < midiActions.Count(); m++)
             {
-                if (obs.Mode == midiActions[m].ObsMode || midiActions[m].ObsMode == 0)
+                if ((int)obs.Mode == midiActions[m].ObsMode || midiActions[m].ObsMode == 0)
                 {
                     if (midiActions[m].Type == EMidiOBSItemType.Modifier || 
                         (midiActions[m].Type != EMidiOBSItemType.Modifier && midiActions[m].Modifier == active_modifier) ||
@@ -109,22 +131,20 @@ namespace OBSMidiRemote.Lib
                                         //
                                         // Scene 
                                         //
-                                        if (midiActions[m].Type == EMidiOBSItemType.Scene || midiActions[m].Type == EMidiOBSItemType.PScene)
+                                        if (midiActions[m].Type == EMidiOBSItemType.Scene || midiActions[m].Type == EMidiOBSItemType.Pscene)
                                         {
                                             
                                             if (midiActions[m].InActions[i].Type == EMidiOBSInputType.On)
                                             {
                                                 if (midiActions[m].Index < obs.Scenes.Count())
                                                 {
-                                                    Console.WriteLine(midiActions[m].Type + "=>" + obs.Scenes[midiActions[m].Index].Name);
-
-                                                    if (midiActions[m].Type == EMidiOBSItemType.PScene)
+                                                    if (midiActions[m].Type == EMidiOBSItemType.Pscene)
                                                     {
-                                                        obs.SetPreviewScene(obs.Scenes[midiActions[m].Index].Name);
+                                                        obs.SwitchPreviewScene(midiActions[m].Index);
                                                     }
                                                     else
                                                     {
-                                                        obs.SetCurrentScene(obs.Scenes[midiActions[m].Index].Name);
+                                                        obs.SwitchScene(midiActions[m].Index);
                                                     }
                                                 }
                                             }
@@ -134,18 +154,16 @@ namespace OBSMidiRemote.Lib
                                         // Scene Item
                                         //
 
-                                        else if (midiActions[m].Type == EMidiOBSItemType.SceneItem || midiActions[m].Type == EMidiOBSItemType.PSceneItem)
+                                        else if (midiActions[m].Type == EMidiOBSItemType.SceneItem || midiActions[m].Type == EMidiOBSItemType.PsceneItem)
                                         {
-                                            int sscene_id = midiActions[m].Type == EMidiOBSItemType.PSceneItem && obs.Mode == 2 ? obs.ActivePScene : obs.ActiveScene;
-                                            if (midiActions[m].Type == EMidiOBSItemType.PSceneItem && obs.Mode == 2)
+                                            int sscene_id = 0;
+                                            if (midiActions[m].Type == EMidiOBSItemType.PsceneItem && (int)obs.Mode == 2)
                                             {
-                                                Console.WriteLine("PScene:" + sscene_id + "@" + midiActions[m].Index);
-                                            }
-                                            else
+                                                sscene_id = obs.ActivePreviewScene.Index;
+                                            }else
                                             {
-                                                Console.WriteLine("Scene:" + sscene_id + "@" + midiActions[m].Index);
+                                                sscene_id = obs.ActiveScene.Index;
                                             }
-
 
                                             if (sscene_id < obs.Scenes.Count())
                                             {
@@ -186,11 +204,22 @@ namespace OBSMidiRemote.Lib
                                         //
                                         // Reload all data from OBS
                                         //
-                                        else if (midiActions[m].Type == EMidiOBSItemType.ReloadOBSData)
+                                        else if (midiActions[m].Type == EMidiOBSItemType.ReloadObsData)
                                         {
-                                            if (midiActions[m].InActions[i].Type == EMidiOBSInputType.On)
+                                            if (midiActions[m].InActions[i].Type == EMidiOBSInputType.On || midiActions[m].InActions[i].Type == EMidiOBSInputType.Toggle)
                                             {
-                                                obs.Refresh();
+                                                obs.Reload();
+                                            }
+                                        }
+
+                                        //
+                                        // Reload all data from OBS
+                                        //
+                                        else if (midiActions[m].Type == EMidiOBSItemType.ReloadScheme)
+                                        {
+                                            if (midiActions[m].InActions[i].Type == EMidiOBSInputType.On || midiActions[m].InActions[i].Type == EMidiOBSInputType.Toggle)
+                                            {
+                                                ReloadScheme();
                                             }
                                         }
 
@@ -209,8 +238,7 @@ namespace OBSMidiRemote.Lib
                                             }
                                             else if (midiActions[m].InActions[i].Type == EMidiOBSInputType.Toggle)
                                             {
-                                                if (obs.OutputStatus.IsStreaming) { obs.StopStreaming(); }
-                                                else { obs.StartStreaming(); }
+                                                obs.ToggleStreaming();
                                             }
                                         }
 
@@ -229,8 +257,41 @@ namespace OBSMidiRemote.Lib
                                             }
                                             else if (midiActions[m].InActions[i].Type == EMidiOBSInputType.Toggle)
                                             {
-                                                if (obs.OutputStatus.IsRecording) { obs.StopRecording(); }
-                                                else { obs.StartRecording(); }
+                                                obs.ToggleRecording();
+                                            }
+                                        }
+
+                                        //
+                                        // Start/Stop replay buffer
+                                        //
+                                        else if (midiActions[m].Type == EMidiOBSItemType.ReplayBuffer)
+                                        {
+                                            if (midiActions[m].InActions[i].Type == EMidiOBSInputType.On)
+                                            {
+                                                obs.StartReplayBuffer();
+                                            }
+                                            else if (midiActions[m].InActions[i].Type == EMidiOBSInputType.Off)
+                                            {
+                                                obs.StopReplayBuffer();
+                                            }
+                                            else if (midiActions[m].InActions[i].Type == EMidiOBSInputType.Toggle)
+                                            {
+                                                obs.ToggleReplayBuffer();
+                                            }
+                                        }
+
+                                        //
+                                        // Save replay buffer
+                                        //
+                                        else if (midiActions[m].Type == EMidiOBSItemType.ReplayBufferSave)
+                                        {
+                                            if (midiActions[m].InActions[i].Type == EMidiOBSInputType.On)
+                                            {
+                                                obs.SaveReplayBuffer();
+                                            }
+                                            else if (midiActions[m].InActions[i].Type == EMidiOBSInputType.Toggle)
+                                            {
+                                                obs.SaveReplayBuffer();
                                             }
                                         }
 
@@ -241,21 +302,22 @@ namespace OBSMidiRemote.Lib
                                         {
                                             if (midiActions[m].InActions[i].Type == EMidiOBSInputType.On)
                                             {
-                                                if (obs.Mode != 2)
+                                                if ((int)obs.Mode != 2)
                                                 {
                                                     obs.SetStudioMode(true);
                                                 }
                                             }
                                             else if (midiActions[m].InActions[i].Type == EMidiOBSInputType.Off)
                                             {
-                                                if (obs.Mode == 2)
+                                                if ((int)obs.Mode == 2)
                                                 {
                                                     obs.SetStudioMode(false);
                                                 }
                                             }
                                             else if (midiActions[m].InActions[i].Type == EMidiOBSInputType.Toggle)
                                             {
-                                                obs.SetStudioMode(obs.Mode != 2 ? true : false);
+                                                //obs.SetStudioMode((int)obs.Mode != 2 ? true : false);
+                                                obs.ToggleStudioMode();
                                             }
                                         }
 
@@ -268,9 +330,8 @@ namespace OBSMidiRemote.Lib
                                             {
                                                 if (midiActions[m].InActions[i].Type == EMidiOBSInputType.On || midiActions[m].InActions[i].Type == EMidiOBSInputType.Toggle)
                                                 {
-                                                    obs.SetTransition(midiActions[m].Index);
+                                                   obs.SetTransition(midiActions[m].Index);
                                                 }
-
                                             }
                                         }
 
@@ -322,10 +383,10 @@ namespace OBSMidiRemote.Lib
             Display(EMidiOBSItemType.SceneItem, EMidiOBSOutputType.Off, -1, -1, true);
             Display(EMidiOBSItemType.AudioItem, EMidiOBSOutputType.Off, -1, -1, true);
             Display(EMidiOBSItemType.Transition, EMidiOBSOutputType.Off, -1, -1, true);
-            Display(EMidiOBSItemType.PScene, EMidiOBSOutputType.Off, -1, -1, true);
-            Display(EMidiOBSItemType.PSceneItem, EMidiOBSOutputType.Off, -1, -1, true);
+            Display(EMidiOBSItemType.Pscene, EMidiOBSOutputType.Off, -1, -1, true);
+            Display(EMidiOBSItemType.PsceneItem, EMidiOBSOutputType.Off, -1, -1, true);
             Display(EMidiOBSItemType.Mode, EMidiOBSOutputType.Off, -1, -1, true);
-            Display(EMidiOBSItemType.ReloadOBSData, EMidiOBSOutputType.Off, -1, -1, true);
+            Display(EMidiOBSItemType.ReloadObsData, EMidiOBSOutputType.Off, -1, -1, true);
             Display(EMidiOBSItemType.Modifier, EMidiOBSOutputType.Off, -1, -1, true);
         }
 
@@ -350,69 +411,32 @@ namespace OBSMidiRemote.Lib
 
         public void Display(EMidiOBSItemType item, EMidiOBSOutputType t, int ix = 0, int obsmode = 0, bool forced = false)
         {
-            if (obsmode == 0) { obsmode = obs.Mode; }
+            if (obsmode == 0) { obsmode = (int)obs.Mode; }
             else if (obsmode == -1) { obsmode = 0; }
            
-            //Console.WriteLine("Display;  obsmode=" + obsmode + ", item=" + item + ", type=" + t + ", index=" + ix + ", forced=" + forced);
-            
             for (int m = 0; m < midiActions.Count(); m++)
             {
                 if (obsmode == 0 || obsmode == midiActions[m].ObsMode || midiActions[m].ObsMode == 0)
                 {
                     if ( (midiActions[m].Type == item && (item == EMidiOBSItemType.Modifier || active_modifier == midiActions[m].Modifier || midiActions[m].Modifier == -1 ) && (midiActions[m].Index == ix || ix == -1)))
                     {
-                 
-                        //Console.WriteLine("--> type " + midiActions[m].Type + ", active_modifier=" + active_modifier + ", modifier=" + midiActions[m].Modifier + ", index=" + midiActions[m].Index + " [OK]");
                         foreach (SMidiOutput o in midiActions[m].OutActions)
                         {
                             if (o.Type == t)
                             {
-                                
-                                //Console.WriteLine("----> Out " + o.Type + " [OK]");
-                                //track last status
                                 if (checkLastOutputStatus(o.Action)) {
                                     if (forced) { _sendMidiCmd(o.Action); } else { SendMidiCommand(o.Action); }
                                 }
                             }
                         }
                     }
-                   /* else if (midiActions[m].Type == SMidiOBSItemType.Modifier)
-                    {
-                        //Console.WriteLine("--> ismodifier " + midiActions[m].Type + " [OK]");
-                        foreach (SMidiOutput o in midiActions[m].OutActions)
-                        {
-                            if (o.Type == t && (midiActions[m].Modifier == ix || ix == -1))
-                            {
-                                //track last status
-                                if (checkLastOutputStatus(o.Action))
-                                {
-                                    if (forced) { _sendMidiCmd(o.Action); } else { SendMidiCommand(o.Action); }
-                                }
-                            }
-                        }
-                    }*/
-                   /* else if (active_modifier != midiActions[m].Modifier && midiActions[m].Modifier != -1)
-                    {
-                        //Console.WriteLine("--> isNotCorrectModifier active_modifier="+active_modifier+", modifier=" + midiActions[m].Modifier + " [OK]");
-                        foreach (SMidiOutput o in midiActions[m].OutActions)
-                        {
-                            if (o.Type == SMidiOBSOutputType.Off)
-                            {
-                                //track last status
-                                if (checkLastOutputStatus(o.Action))
-                                {
-                                    if (forced) { _sendMidiCmd(o.Action); } else { SendMidiCommand(o.Action); }
-                                }    
-                            }
-                        }
-                    }*/
                 }
             }
         }
 
         public void RenderSurface()
         {
-            //reset scenes
+            //reset surface
             for (int m = 0; m < midiActions.Count(); m++)
             {
                 if (midiActions[m].Type == EMidiOBSItemType.Modifier)
@@ -432,26 +456,25 @@ namespace OBSMidiRemote.Lib
                     {
                         Display(midiActions[m].Type, EMidiOBSOutputType.Off, midiActions[m].Index);
                     }
-
                 }
             }
 
             //scene part
-           // Display(SMidiOBSItemType.Scene, SMidiOBSOutputType.Off, -1, -1);
-           // Display(SMidiOBSItemType.SceneItem, SMidiOBSOutputType.Off, -1, -1);
-          //  Display(SMidiOBSItemType.AudioItem, SMidiOBSOutputType.Off, -1, -1);
-          //  Display(SMidiOBSItemType.AudioVolume, SMidiOBSOutputType.Off, -1, -1);
-          //  Display(SMidiOBSItemType.ReloadOBSData, SMidiOBSOutputType.Off, -1, -1);
-          //  Display(SMidiOBSItemType.Stream, SMidiOBSOutputType.Off, -1, -1);
-          //  Display(SMidiOBSItemType.Record, SMidiOBSOutputType.Off, -1, -1);
-           // Display(SMidiOBSItemType.Transition, SMidiOBSOutputType.Off, -1, -1);
-            //Display(SMidiOBSItemType.Modifier, SMidiOBSOutputType.On, -1, -1);
-           // Display(SMidiOBSItemType.Mode, SMidiOBSOutputType.On, -1, -1);
+            // Display(SMidiOBSItemType.Scene, SMidiOBSOutputType.Off, -1, -1);
+            // Display(SMidiOBSItemType.SceneItem, SMidiOBSOutputType.Off, -1, -1);
+            // Display(SMidiOBSItemType.AudioItem, SMidiOBSOutputType.Off, -1, -1);
+            // Display(SMidiOBSItemType.AudioVolume, SMidiOBSOutputType.Off, -1, -1);
+            // Display(SMidiOBSItemType.ReloadOBSData, SMidiOBSOutputType.Off, -1, -1);
+            // Display(SMidiOBSItemType.Stream, SMidiOBSOutputType.Off, -1, -1);
+            // Display(SMidiOBSItemType.Record, SMidiOBSOutputType.Off, -1, -1);
+            // Display(SMidiOBSItemType.Transition, SMidiOBSOutputType.Off, -1, -1);
+            // Display(SMidiOBSItemType.Modifier, SMidiOBSOutputType.On, -1, -1);
+            // Display(SMidiOBSItemType.Mode, SMidiOBSOutputType.On, -1, -1);
 
-            if (obs.Connected())
+            if (obs.Connected)
             {
                 //ObsMode
-                Display(EMidiOBSItemType.Mode, obs.Mode == 2 ? EMidiOBSOutputType.Active : EMidiOBSOutputType.On, -1);
+                Display(EMidiOBSItemType.Mode, (int)obs.Mode == 2 ? EMidiOBSOutputType.Active : EMidiOBSOutputType.On, -1);
 
                 //Websocket status
                 Display(EMidiOBSItemType.ConnectionStatus, EMidiOBSOutputType.On, -1);
@@ -459,9 +482,9 @@ namespace OBSMidiRemote.Lib
                 //scenes & sources
                 for (int i = 0; i < obs.Scenes.Count(); i++)
                 {
-                    if (obs.ActiveSceneName == obs.Scenes[i].Name)
+                    if (obs.ActiveScene.Id == obs.Scenes[i].Id)
                     {
-                        Display(EMidiOBSItemType.Scene, EMidiOBSOutputType.Active, i, obs.Mode);
+                        Display(EMidiOBSItemType.Scene, EMidiOBSOutputType.Active, i, (int)obs.Mode);
                         for (int s = 0; s < obs.Scenes[i].Items.Count(); s++)
                         {
                             Display(EMidiOBSItemType.SceneItem, obs.Scenes[i].Items[s].Visible ? EMidiOBSOutputType.Active : EMidiOBSOutputType.On, s);
@@ -472,31 +495,31 @@ namespace OBSMidiRemote.Lib
                         Display(EMidiOBSItemType.Scene, EMidiOBSOutputType.On, i);
                     }
 
-                    if (obs.Mode == 2)
+                    if ((int)obs.Mode == 2)
                     {
-                        if (obs.ActivePSceneName == obs.Scenes[i].Name)
+                        if (obs.ActivePreviewScene.Id == obs.Scenes[i].Id)
                         {
-                            Display(EMidiOBSItemType.PScene, EMidiOBSOutputType.Active, i);
+                            Display(EMidiOBSItemType.Pscene, EMidiOBSOutputType.Active, i);
 
                             for (int s = 0; s < obs.Scenes[i].Items.Count(); s++)
                             {
-                                Display(EMidiOBSItemType.PSceneItem, obs.Scenes[i].Items[s].Visible ? EMidiOBSOutputType.Active : EMidiOBSOutputType.On, s);
+                                Display(EMidiOBSItemType.PsceneItem, obs.Scenes[i].Items[s].Visible ? EMidiOBSOutputType.Active : EMidiOBSOutputType.On, s);
                             }
                         }
                         else
                         {
-                            Display(EMidiOBSItemType.PScene, EMidiOBSOutputType.On, i);
+                            Display(EMidiOBSItemType.Pscene, EMidiOBSOutputType.On, i);
                         }
                     }
                 }
 
                 //audio 
                 int _audiosources = 0;
-                foreach (var item in obs.SourceItems)
-                {
-                    if (obs.SourceHasAudio(item.TypeId))
+                if (obs.AudioSources.Count > 0) { 
+                    foreach (var item in obs.AudioSources)
                     {
-                        if (item.Muted || item.Volume == 0)
+                        if (item.Hidden) { continue; }
+                        if (item.Muted)
                         {
                             Display(EMidiOBSItemType.AudioItem, EMidiOBSOutputType.Muted, _audiosources);
                         }
@@ -516,24 +539,30 @@ namespace OBSMidiRemote.Lib
                     }
                 }
 
+               
                 //transitions
                 int tr_i = 0;
-                foreach (var tr_name in obs.Transitions)
-                {
-                    if (tr_name == obs.CurrentTransition.Name)
+                if (obs.Transitions.Count > 0) { 
+                    foreach (var tr in obs.Transitions)
                     {
-                        Display(EMidiOBSItemType.Transition, EMidiOBSOutputType.Active, tr_i);
+                        if (obs.ActiveTransition.Id == tr.Id)
+                        {
+                            Display(EMidiOBSItemType.Transition, EMidiOBSOutputType.Active, tr_i);
+                        }
+                        else
+                        {
+                            Display(EMidiOBSItemType.Transition, EMidiOBSOutputType.On, tr_i);
+                        }
+                        tr_i++;
                     }
-                    else
-                    {
-                        Display(EMidiOBSItemType.Transition, EMidiOBSOutputType.On, tr_i);
-                    }
-                    tr_i++;
                 }
 
-                Display(EMidiOBSItemType.ReloadOBSData, EMidiOBSOutputType.On, -1);
-                Display(EMidiOBSItemType.Stream, obs.OutputStatus.IsStreaming ? EMidiOBSOutputType.Active : EMidiOBSOutputType.On, -1);
-                Display(EMidiOBSItemType.Record, obs.OutputStatus.IsRecording ? EMidiOBSOutputType.Active : EMidiOBSOutputType.On, -1);
+                Display(EMidiOBSItemType.Stream, obs.State.Stream == EOBSStreamingState.Started ? EMidiOBSOutputType.Active : EMidiOBSOutputType.On, -1);
+                Display(EMidiOBSItemType.Record, obs.State.Record == EOBSStreamingState.Started ? EMidiOBSOutputType.Active : EMidiOBSOutputType.On, -1);
+                Display(EMidiOBSItemType.ReplayBuffer, obs.State.Replay == EOBSStreamingState.Started ? EMidiOBSOutputType.Active : EMidiOBSOutputType.On, -1);
+                Display(EMidiOBSItemType.ReplayBufferSave, obs.State.Replay == EOBSStreamingState.Saving ? EMidiOBSOutputType.Active : EMidiOBSOutputType.On, -1);
+
+                Display(EMidiOBSItemType.ReloadObsData, EMidiOBSOutputType.On, -1);
             }
             else
             {

@@ -1,4 +1,11 @@
-﻿using System;
+﻿#region license
+/*
+    The MIT License (MIT)
+    Copyright (c) 2019 Techfactory.hu
+*/
+#endregion
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -94,6 +101,7 @@ namespace OBSMidiRemote.Lib.Device
         {
             if (_iDevice != null && !_iDevice.IsDisposed) { _iDevice.Dispose(); }
             if (_oDevice != null && !_oDevice.IsDisposed) { _oDevice.Dispose(); }
+            OnStatusChanged(this, EMidiEvent.DeviceDisconnected);
         }
 
         public bool IsReady()
@@ -133,6 +141,7 @@ namespace OBSMidiRemote.Lib.Device
         private void OnMidiError(object sender, ErrorEventArgs e)
         {
             ready = false;
+            OnStatusChanged(this, EMidiEvent.Error);
         }
     }
 }

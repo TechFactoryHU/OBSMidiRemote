@@ -24,8 +24,9 @@
     <UpdateRequired>false</UpdateRequired>
     <MapFileExtensions>true</MapFileExtensions>
     <ApplicationRevision>0</ApplicationRevision>
-    <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
+    <ApplicationVersion>1.1.10.%2a</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
+    <PublishWizardCompleted>true</PublishWizardCompleted>
     <BootstrapperEnabled>true</BootstrapperEnabled>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x86'">
@@ -43,6 +44,27 @@
   </PropertyGroup>
   <PropertyGroup>
     <StartupObject>OBSMidiRemote.Program</StartupObject>
+  </PropertyGroup>
+  <PropertyGroup>
+    <ManifestCertificateThumbprint>89B22473F7A094F7B887A939C83F8C4FBFA76F45</ManifestCertificateThumbprint>
+  </PropertyGroup>
+  <PropertyGroup>
+    <ManifestKeyFile>OBSMidiRemote_TemporaryKey.pfx</ManifestKeyFile>
+  </PropertyGroup>
+  <PropertyGroup>
+    <GenerateManifests>true</GenerateManifests>
+  </PropertyGroup>
+  <PropertyGroup>
+    <TargetZone>LocalIntranet</TargetZone>
+  </PropertyGroup>
+  <PropertyGroup>
+    <ApplicationManifest>Properties\app.manifest</ApplicationManifest>
+  </PropertyGroup>
+  <PropertyGroup>
+    <SignManifests>true</SignManifests>
+  </PropertyGroup>
+  <PropertyGroup>
+    <ApplicationIcon>icons\icon.ico</ApplicationIcon>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Newtonsoft.Json, Version=12.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
@@ -66,16 +88,38 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="FSettings.cs">
+    <Compile Include="Forms\FEditor.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="FSettings.Designer.cs">
-      <DependentUpon>FSettings.cs</DependentUpon>
+    <Compile Include="Forms\FEditor.Designer.cs">
+      <DependentUpon>FEditor.cs</DependentUpon>
     </Compile>
-    <Compile Include="Lib\CDeviceObsGw.cs" />
+    <Compile Include="Forms\FEditorItem.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\FEditorItem.Designer.cs">
+      <DependentUpon>FEditorItem.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\FEditorMidiLog.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\FEditorMidiLog.Designer.cs">
+      <DependentUpon>FEditorMidiLog.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\FMain.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\FMain.Designer.cs">
+      <DependentUpon>FMain.cs</DependentUpon>
+    </Compile>
     <Compile Include="Lib\CInputDeviceItem.cs" />
     <Compile Include="Lib\CMidiObserver.cs" />
-    <Compile Include="Lib\SMidiTypes.cs" />
+    <Compile Include="Lib\COBSMidiRemote.cs" />
+    <Compile Include="Lib\CSLOBSConnector.cs" />
+    <Compile Include="Lib\IOBSConnector.cs" />
+    <Compile Include="Lib\SLOBS\SLOBSWebsocket.cs" />
+    <Compile Include="Lib\SLOBS\Types.cs" />
+    <Compile Include="Lib\TypesMidi.cs" />
     <Compile Include="Lib\CMidiXMLSchema.cs" />
     <Compile Include="Lib\Device\CObsDeviceMidi.cs" />
     <Compile Include="Lib\Device\CObsDeviceSerial.cs" />
@@ -108,11 +152,22 @@
     <Compile Include="Lib\PureMidi\MidiMessageEvent.cs" />
     <Compile Include="Lib\PureMidi\OutputDevice.cs" />
     <Compile Include="Lib\PureMidi\WindowsMultimediaDevice.cs" />
+    <Compile Include="Lib\SOBSConnector.cs" />
+    <Compile Include="Lib\Types.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <EmbeddedResource Include="Forms\FEditor.resx">
+      <DependentUpon>FEditor.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\FEditorItem.resx">
+      <DependentUpon>FEditorItem.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\FEditorMidiLog.resx">
+      <DependentUpon>FEditorMidiLog.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="lang\en.resx" />
-    <EmbeddedResource Include="FSettings.resx">
-      <DependentUpon>FSettings.cs</DependentUpon>
+    <EmbeddedResource Include="Forms\FMain.resx">
+      <DependentUpon>FMain.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="lang\hu.resx">
       <SubType>Designer</SubType>
@@ -128,7 +183,9 @@
       <DesignTime>True</DesignTime>
     </Compile>
     <None Include="Lib\OBSWebsocketdotnet\LICENSE.md" />
+    <None Include="OBSMidiRemote_TemporaryKey.pfx" />
     <None Include="packages.config" />
+    <None Include="Properties\app.manifest" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
@@ -143,6 +200,9 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="devicemaps\djcontrol_e2.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="devicemaps\tfserial_device.xml">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>

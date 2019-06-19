@@ -32,7 +32,6 @@ using System.Threading.Tasks;
 
 namespace OBSMidiRemote.Lib.OBSWebsocketdotnet
 {
-   
     public partial class OBSWebsocket
     {
         #region Events
@@ -155,8 +154,12 @@ namespace OBSMidiRemote.Lib.OBSWebsocketdotnet
         /// Triggered every 2 seconds after enabling it by calling  Heartbeat.
         /// </summary>
         public event HeartbeatCallback Heartbeat;
+
+        public event SourceVolumeChangedCallback SourceVolumeChanged;
+        public event SourceMuteStateChangedCallback SourceMuteStateChanged;
+
+        //interests: TakeSourceScreenshot SendCaptions 
         public event EventHandler OnError;
-        public event EventHandler AsyncQueueEmpty; 
 
         #endregion
 
@@ -198,18 +201,14 @@ namespace OBSMidiRemote.Lib.OBSWebsocketdotnet
         public WebSocket WSConnection { get; private set; }
 
         private delegate void RequestCallback(OBSWebsocket sender, JObject body);
-
-        private Dictionary<string, TaskCompletionSource<JObject>> _responseHandlers;
-        private Dictionary<string, OBSAsyncCallback> _asyncresponseHandlers;
-        private bool _asyncCallInprogress = false;
+        private Dictionary<string, OBSResponseHandler> _responseHandlers;
 
         /// <summary>
         /// Constructor
         /// </summary>
         public OBSWebsocket()
         {
-            _responseHandlers = new Dictionary<string, TaskCompletionSource<JObject>>();
-            _asyncresponseHandlers = new Dictionary<string, OBSAsyncCallback>();
+            _responseHandlers = new Dictionary<string, OBSResponseHandler>();
         }
 
         /// <summary>
@@ -291,15 +290,12 @@ namespace OBSMidiRemote.Lib.OBSWebsocketdotnet
             JObject err = new JObject();
             err.Add("status", "error");
             err.Add("error", "Disconnected");
-            foreach (var acb in _asyncresponseHandlers)
-            {
-                acb.Value.callable.Invoke(err);
-            }
-
             foreach (var cb in _responseHandlers)
             {
-                var tcs = cb.Value;
-                tcs.TrySetCanceled();
+                var handler = cb.Value;
+                handler.Task.SetResult(err);
+                //tcs.TrySetCanceled();
+                _responseHandlers.Remove(cb.Key);
             }
         }
 
@@ -308,26 +304,29 @@ namespace OBSMidiRemote.Lib.OBSWebsocketdotnet
         /// </summary>
         public void CheckTimeouts()
         {
-            if (_asyncresponseHandlers.Count > 0)
+            if (_responseHandlers.Count > 0)
             {
-                foreach (var acb in _asyncresponseHandlers)
+                JObject err = new JObject();
+                err.Add("status", "error");
+                err.Add("error", "Timeout");
+                try
                 {
-                    if (((TimeSpan)(DateTime.Now - acb.Value.timestamp)).TotalMilliseconds > 5000)
+                    foreach (var cb in _responseHandlers)
                     {
-                        JObject err = new JObject();
-                        err.Add("status", "error");
-                        err.Add("error", "Timeout");
-                        acb.Value.callable.Invoke(err);
-                        _asyncresponseHandlers.Remove(acb.Key);
+                        if (((TimeSpan)(DateTime.Now - cb.Value.Timestamp)).TotalMilliseconds > 5000)
+                        {
+                            var handler = cb.Value;
+                            handler.Task.SetResult(err);
+                            _responseHandlers.Remove(cb.Key);
+                        }
                     }
-                }
-            }
+                }catch (InvalidOperationException e)
+                {
 
-            if (_asyncresponseHandlers.Count == 0 && _asyncCallInprogress)
-            {
-                _asyncCallInprogress = false;
-                //trigger event
-                if (AsyncQueueEmpty != null) { AsyncQueueEmpty(this, new EventArgs()); }
+                }catch (Exception e)
+                {
+
+                }
             }
         }
 
@@ -339,28 +338,17 @@ namespace OBSMidiRemote.Lib.OBSWebsocketdotnet
                 return;
 
             JObject body = JObject.Parse(e.Data);
-
             if (body["message-id"] != null)
             {
                 // Handle a request :
                 // Find the response handler based on
                 // its associated message ID
                 string msgID = (string)body["message-id"];
-
-                //async message handlers
-                if (_asyncresponseHandlers.ContainsKey(msgID)) { 
-                    var asyncHandler = _asyncresponseHandlers[msgID];
-                    asyncHandler.callable.Invoke(body);
-                    _asyncresponseHandlers.Remove(msgID);
-                    return;
-                }
-
-                var handler = _responseHandlers[msgID];
-                if (handler != null)
+                if (_responseHandlers.ContainsKey(msgID))
                 {
+                    var handler = _responseHandlers[msgID];
                     // Set the response body as Result and notify the request sender
-                    handler.SetResult(body);
-
+                    handler.Task.SetResult(body);
                     // The message with the given ID has been processed,
                     // so its handler can be discarded
                     _responseHandlers.Remove(msgID);
@@ -374,7 +362,7 @@ namespace OBSMidiRemote.Lib.OBSWebsocketdotnet
             }
         }
 
-        public JObject SendRequest(string requestType, JObject additionalFields = null)
+        public Task<JObject> SendRequest(string requestType, JObject additionalFields = null)
         {
             string messageID;
 
@@ -400,12 +388,15 @@ namespace OBSMidiRemote.Lib.OBSWebsocketdotnet
         
             // Prepare the asynchronous response handler
             var tcs = new TaskCompletionSource<JObject>();
-            _responseHandlers.Add(messageID, tcs);
+            _responseHandlers.Add(messageID, new OBSResponseHandler(tcs));
 
             // Send the message and wait for a response
             // (received and notified by the websocket response handler)
-            WSConnection.Send(body.ToString());
-            tcs.Task.Wait();
+            //WSConnection.Send(body.ToString());
+            WSConnection.SendAsync(body.ToString(), delegate (bool completed) { });
+            return tcs.Task;
+
+           /* tcs.Task.Wait();
 
             if (tcs.Task.IsCanceled)
                 throw new ErrorResponseException("Request canceled");
@@ -419,26 +410,21 @@ namespace OBSMidiRemote.Lib.OBSWebsocketdotnet
                 throw new ErrorResponseException((string)result["error"]);
             }
 
-            return result;
+            return result;*/
         }
 
-        /// <summary>
-        /// Sends a message to the websocket API with the specified request type and optional parameters async
-        /// </summary>
-        /// <param name="callback">Callback function</param>
-        /// <param name="requestType">obs-websocket request type, must be one specified in the protocol specification</param>
-        /// <param name="additionalFields">additional JSON fields if required by the request type</param>
-        /// <returns>The server's JSON response as a JObject</returns>
-        public void SendRequestAsync(Action<JObject> callback, string requestType, JObject additionalFields = null)
+        public void SyncRequest(string requestType, JObject additionalFields = null)
         {
             string messageID;
             // Generate a random message id and make sure it is unique within the handlers dictionary
             do { messageID = NewMessageID(); }
-            while (_asyncresponseHandlers.ContainsKey(messageID));
+            while (_responseHandlers.ContainsKey(messageID));
+
             // Build the bare-minimum body for a request
             var body = new JObject();
             body.Add("request-type", requestType);
             body.Add("message-id", messageID);
+
             // Add optional fields if provided
             if (additionalFields != null)
             {
@@ -446,11 +432,8 @@ namespace OBSMidiRemote.Lib.OBSWebsocketdotnet
                 {
                     MergeArrayHandling = MergeArrayHandling.Union
                 };
-
                 body.Merge(additionalFields);
             }
-            _asyncresponseHandlers.Add(messageID, new OBSAsyncCallback(callback));
-            _asyncCallInprogress = true; 
             WSConnection.Send(body.ToString());
         }
 
@@ -458,9 +441,9 @@ namespace OBSMidiRemote.Lib.OBSWebsocketdotnet
         /// Requests version info regarding obs-websocket, the API and OBS Studio
         /// </summary>
         /// <returns>Version info in an <see cref="OBSVersion"/> object</returns>
-        public OBSVersion GetVersion()
+        public async Task<OBSVersion> GetVersion()
         {
-            JObject response = SendRequest("GetVersion");
+            JObject response = await SendRequest("GetVersion");
             return new OBSVersion(response);
         }
 
@@ -468,9 +451,9 @@ namespace OBSMidiRemote.Lib.OBSWebsocketdotnet
         /// Request authentication data. You don't have to call this manually.
         /// </summary>
         /// <returns>Authentication data in an <see cref="OBSAuthInfo"/> object</returns>
-        public OBSAuthInfo GetAuthInfo()
+        public async Task<OBSAuthInfo> GetAuthInfo()
         {
-            JObject response = SendRequest("GetAuthRequired");
+            JObject response = await SendRequest("GetAuthRequired");
             return new OBSAuthInfo(response);
         }
 
@@ -480,32 +463,18 @@ namespace OBSMidiRemote.Lib.OBSWebsocketdotnet
         /// <param name="password">User password</param>
         /// <param name="authInfo">Authentication data</param>
         /// <returns>true if authentication succeeds, false otherwise</returns>
-        public bool Authenticate(string password, OBSAuthInfo authInfo)
+        public async Task<bool> Authenticate(string password, OBSAuthInfo authInfo)
         {
             string authResponse = GetAuthResponse(password, authInfo);
             var requestFields = new JObject();
             requestFields.Add("auth", authResponse);
 
-            try
+            var response = await SendRequest("Authenticate", requestFields);
+            if (response["error"] != null)
             {
-                // Throws ErrorResponseException if auth fails
-                var response = SendRequest("Authenticate", requestFields);
-            }
-            catch(ErrorResponseException)
-            {
-                throw new AuthFailureException();
                 return false;
             }
-
             return true;
-        }
-
-        public void AuthenticateAsync(Action<JObject> callback, string password, OBSAuthInfo authInfo)
-        {
-            string authResponse = GetAuthResponse(password, authInfo);
-            var requestFields = new JObject();
-            requestFields.Add("auth", authResponse);
-            SendRequestAsync(callback, "Authenticate", requestFields);
         }
 
         private string GetAuthResponse(string password, OBSAuthInfo authInfo)
@@ -671,6 +640,16 @@ namespace OBSMidiRemote.Lib.OBSWebsocketdotnet
                 case "ReplayStopped":
                     if (ReplayBufferStateChanged != null)
                         ReplayBufferStateChanged(this, OutputState.Stopped);
+                    break;
+
+                case "SourceVolumeChanged":
+                    if (SourceVolumeChanged!= null)
+                        SourceVolumeChanged(this, (string)body["source-name"], (float)body["volume"]);
+                    break;
+
+                case "SourceMuteStateChanged":
+                    if (SourceMuteStateChanged != null)
+                        SourceMuteStateChanged(this, (string)body["source-name"], (bool)body["muted"]);
                     break;
 
                 case "Exiting":

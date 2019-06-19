@@ -66,7 +66,7 @@ Bővebb infó a weboldalunkon.
 				<Output type="off" cmd="0x80" data1="0x0C" data2="00"/>
 			</Item>
 			<!-- StatusLed -->
-			<Item type="single" obsmode="0" bind="status" index="0" modifier="-1">
+			<Item type="single" obsmode="0" bind="connection-status" index="0" modifier="-1">
 				<Output type="on" cmd="0x90" data1="0x1E" data2="0x03" channel="01"/>
 				<Output type="off" cmd="0x90" data1="0x1E" data2="0x01" channel="01"/>
 			</Item>

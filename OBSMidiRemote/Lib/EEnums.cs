@@ -1,4 +1,11 @@
-﻿using System;
+﻿#region license
+/*
+    The MIT License (MIT)
+    Copyright (c) 2019 Techfactory.hu
+*/
+#endregion
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -6,11 +13,32 @@ using System.Threading.Tasks;
 
 namespace OBSMidiRemote.Lib
 {
+    public enum EOBSConnectorType
+    {
+        Unknown,
+        OBS,        //OBS
+        SLOBS       //StreamLabs OBS
+    }
+
     public enum InputDeviceType
     {
         UNKNOWN,
         SERIAL,
         MIDI
+    }
+    
+    public enum EOBSCStatus
+    {
+        Unknown,
+        Ready,
+        Connecting,
+        Connected,
+        WrongAuth,
+        Error,
+        Disconnected,
+        DeviceError,
+        DeviceReady,
+        DeviceDisconnected
     }
 
     public enum EMidiEvent
@@ -32,16 +60,19 @@ namespace OBSMidiRemote.Lib
         Modifier,
         Scene,
         SceneItem,
-        PScene,
-        PSceneItem,
+        Pscene,
+        PsceneItem,
         AudioItem,
         AudioVolume,
         Transition,
         ConnectionStatus,
-        ReloadOBSData,
+        ReloadObsData,
         Stream,
         Record,
-        Mode
+        Mode,
+        ReplayBuffer,
+        ReplayBufferSave,
+        ReloadScheme
     }
 
     public enum EMidiOBSOutputType
@@ -74,5 +105,38 @@ namespace OBSMidiRemote.Lib
         NoteOn = 0x90,
         ControlChange = 0xB0
     }
+
+    public enum EMidiObsMode
+    {
+        Any = 0,
+        Normal = 1,
+        Studio = 2
+    }
+
+    public enum EMidiSchemaItemType
+    {
+        Item = 0,
+        Modifier = 1
+    }
+
+    public static class CMidiFields
+    {
+        public readonly static EMidiOBSItemType[] Ranges = new EMidiOBSItemType[] {
+            EMidiOBSItemType.Scene, EMidiOBSItemType.SceneItem, EMidiOBSItemType.Pscene, EMidiOBSItemType.PsceneItem,
+            EMidiOBSItemType.AudioItem,  EMidiOBSItemType.AudioVolume,  EMidiOBSItemType.Transition
+
+        };
+
+        public readonly static EMidiOBSItemType[] Singles = new EMidiOBSItemType[] {
+            EMidiOBSItemType.Record, EMidiOBSItemType.Stream, EMidiOBSItemType.Mode, EMidiOBSItemType.ConnectionStatus,
+            EMidiOBSItemType.ReloadObsData
+        };
+
+        public readonly static int[] BaudRates = new int[] { 9600, 19200, 38400, 57600, 115200, 256000 };
+        public readonly static int DefaultBaudRate = 115200;
+    }
+
+
+   
 
 }

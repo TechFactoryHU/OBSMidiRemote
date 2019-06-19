@@ -1,4 +1,11 @@
-﻿using System;
+﻿#region license
+/*
+    The MIT License (MIT)
+    Copyright (c) 2019 Techfactory.hu
+*/
+#endregion
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;

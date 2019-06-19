@@ -201,4 +201,19 @@
   <data name="select_out_device" xml:space="preserve">
     <value>Válassz MIDI kimenetet</value>
   </data>
+  <data name="tab1_title" xml:space="preserve">
+    <value>Kapcsolódás</value>
+  </data>
+  <data name="tab2_title" xml:space="preserve">
+    <value>XML sémák</value>
+  </data>
+  <data name="new_scheme" xml:space="preserve">
+    <value>Új séma</value>
+  </data>
+  <data name="refresh" xml:space="preserve">
+    <value>Frissítés</value>
+  </data>
+  <data name="slobs_info" xml:space="preserve">
+    <value>Legalább slobs-0.15.1 verzió szükséges</value>
+  </data>
 </root>
