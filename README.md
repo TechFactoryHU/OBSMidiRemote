@@ -1,15 +1,16 @@
 <img src="OBSMidiRemote/icons/icon.png" alt="logo" width="48" align="absmiddle"/> OBSMidiRemote - windows
 =======================
 
-With this app you can turn any MIDI controller to an [Open Broadcaster Software (OBS)] remote. 
+With this app you can turn any MIDI controller to an [Open Broadcaster Software (OBS)] or [Streamlabs OBS] remote.
 Serial devices also supported, so, you can build your own controller using microcontroller (Arduino/ESP8266/etc...)
 
 
 #### Main features
 
-- MIDI device support
-- Translate MIDI commands to OBS (through OBS-Websocket plugin)
+- Any MIDI device support
+- Translate MIDI commands to OBS (through OBS-Websocket plugin) or SLOBS 
 - MIDI mappings stored in XML format, [XSD available]
+- XML scheme editor
 - LED feedback configurable
 - Devices through SERIAL port also supported (Arduino ...)
 
@@ -62,3 +63,4 @@ Sample arduino code available in examples folder.
 [release page]: https://github.com/TechFactoryHU/OBSMidiRemote/releases
 [XSD available]: https://github.com/TechFactoryHU/OBSMidiRemote/tree/v1.0.0/examples/xmlschemas
 [Open Broadcaster Software (OBS)]: https://obsproject.com
+[Streamlabs OBS]: https://streamlabs.com/streamlabs-obs
